@@ -22,7 +22,7 @@ This project was created as part of a spike in exploring a reliable data layer f
    mkdir -p ~/minio/data
    export MINIO_ROOT_USER=minio
    export MINIO_ROOT_PASSWORD=minio_password
-   minio server --console-address :9090 ~/minio/data
+   minio server --console-address :9090 ~/data/minio
    ```
 
 ### Docker
@@ -40,10 +40,10 @@ This project was created as part of a spike in exploring a reliable data layer f
    -p 9000:9000 \
    -p 9090:9090 \
    --name minio \
-   -v ~/minio/data:/data \
+   -v ~/data/minio:/data/minio \
    -e MINIO_ROOT_USER=minio \
    -e MINIO_ROOT_PASSWORD=minio_password \
-   quay.io/minio/minio minio server /data --console-address :9090
+   quay.io/minio/minio minio server /data/minio --console-address :9090
    ```
    
 1. Alternatively, run the docker-compose file.
@@ -52,5 +52,84 @@ This project was created as part of a spike in exploring a reliable data layer f
    docker-compose -f docker/docker-compose.yaml up
    ```
 
-### Kubernetes
+### Kubernetes (Single Node - HostPath)
 
+This setup is a single node k8s cluster, usually a local setup.
+
+1. Run the following manifest file to create the needed k8s storage objects.
+
+   ```shell
+   cd k8s/single-hostpath
+   kubectl apply -f pod.yaml
+   kc get pod -n minio
+   NAME    READY   STATUS    RESTARTS   AGE
+   minio   1/1     Running   0          21s
+   ```
+
+1. Run the following manifest file to expose the pod to the network.
+
+   ```shell
+   kubectl apply -f service.yaml
+   kubectl get svc -n minio
+   NAME            TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
+   minio-api       LoadBalancer   10.43.184.223   192.168.1.67   9000:30241/TCP   7s
+   minio-console   LoadBalancer   10.43.160.222   192.168.1.67   9090:31362/TCP   7s
+   ```
+
+   Note the external ip address and navigate your browser to `http://<external-ip>:9090`.
+
+   **Alternatively**, run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
+
+### Kubernetes (Single Node - PVC)
+
+This setup is a single node k8s cluster, usually a local setup.
+
+1. Create directory in k8s. Since I am running Rancher Desktop, we can use `rdctl`, the equivalent of ssh to the k8s node.
+
+   ```shell
+   rdctl shell
+   # Once we are in the k8s node, create the mount point for the persistent volume.
+   sudo mkdir /mnt/disk1/data
+   exit
+   ```
+
+1. Run the following manifest file to create the needed k8s storage objects.
+
+   ```shell
+   cd k8s/single-pvc
+   kubectl apply -f storage.yaml
+   kubectl get pv
+   NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS    REASON   AGE
+   local-pv   2Gi        RWO            Retain           Available           local-storage            59s
+   kubectl get pvc -n minio
+   NAME        STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS    AGE
+   minio-pvc   Pending                                      local-storage   51s
+   # The pvc should be pending since it hasn't been claimed.
+   ```
+
+1. Run the following manifest file to run minio pod.
+
+   ```shell
+   kubectl apply -f pod.yaml
+   kubectl get pod -n minio
+   NAME    READY   STATUS    RESTARTS   AGE
+   minio   1/1     Running   0          6m55s
+   ```
+
+1. Run the following manifest file to expose the pod to the network.
+
+   ```shell
+   kubectl apply -f service.yaml
+   kubectl get svc -n minio
+   NAME            TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
+   minio-api       LoadBalancer   10.43.184.223   192.168.1.67   9000:30241/TCP   7s
+   minio-console   LoadBalancer   10.43.160.222   192.168.1.67   9090:31362/TCP   7s
+   ```
+   
+   Note the external ip address and navigate your browser to `http://<external-ip>:9090`.
+
+   **Alternatively**, run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
+
+## References
+
+[Minio: Quickstart for Kubernetes](https://min.io/docs/minio/kubernetes/upstream/index.html)
