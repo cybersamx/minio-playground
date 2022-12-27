@@ -31,6 +31,7 @@ This project was created as part of a spike in exploring a reliable data layer f
 
    ```shell
    mkdir -p ~/minio/data
+   chmod -R 777 /mnt/disk1/data
    ```
 
 1. Pull and run minio.
@@ -78,7 +79,7 @@ This setup is a single node k8s cluster, usually a local setup.
 
    Note the external ip address and navigate your browser to `http://<external-ip>:9090`.
 
-   **Alternatively**, run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
+   **Alternatively**, don't apply `service.yaml` and run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
 
 ### Kubernetes (Single Node - PVC)
 
@@ -90,6 +91,7 @@ This setup is a single node k8s cluster, usually a local setup.
    rdctl shell
    # Once we are in the k8s node, create the mount point for the persistent volume.
    sudo mkdir /mnt/disk1/data
+   chmod -R 777 /mnt/disk1/data
    exit
    ```
 
@@ -128,7 +130,7 @@ This setup is a single node k8s cluster, usually a local setup.
    
    Note the external ip address and navigate your browser to `http://<external-ip>:9090`.
 
-   **Alternatively**, run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
+   **Alternatively**, don't apply `service.yaml` and run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
 
 ## References
 

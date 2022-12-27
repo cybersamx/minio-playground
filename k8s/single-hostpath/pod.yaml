@@ -23,9 +23,9 @@ spec:
         - minio server /data/minio --console-address :9090
       env:
         - name: MINIO_ROOT_USER
-          value: minio
+          value: admin
         - name: MINIO_ROOT_PASSWORD
-          value: minio_password
+          value: password
       volumeMounts:
         - mountPath: /data/minio
           name: local-vol
