@@ -15,7 +15,7 @@ This project was created as part of a spike in exploring a reliable data layer f
    ```shell
    brew install minio/stable/minio
    ```
-   
+
 1. Run minio server.
 
    ```shell
@@ -46,7 +46,7 @@ This project was created as part of a spike in exploring a reliable data layer f
    -e MINIO_ROOT_PASSWORD=minio_password \
    quay.io/minio/minio minio server /data/minio --console-address :9090
    ```
-   
+
 1. Alternatively, run the docker-compose file.
 
    ```shell
@@ -127,11 +127,50 @@ This setup is a single node k8s cluster, usually a local setup.
    minio-api       LoadBalancer   10.43.184.223   192.168.1.67   9000:30241/TCP   7s
    minio-console   LoadBalancer   10.43.160.222   192.168.1.67   9090:31362/TCP   7s
    ```
-   
+
    Note the external ip address and navigate your browser to `http://<external-ip>:9090`.
 
    **Alternatively**, don't apply `service.yaml` and run `kubectl port-forward pod/minio 9000 9090 -n minio` and navigate to <http://localhost:9090/>.
 
+## Client Examples
+
+### Go Client
+
+1. Launch a local minio server.
+
+   ```shell
+   docker-compose -f docker/docker-compose.yaml up
+   ```
+
+1. Launch the browser and navigate to <http://localhost:9090/>.
+1. Navigate to User > Access Keys (<http://localhost:9090/access-keys>) to create a new access key. Copy the key.
+1. Build the go client.
+
+   ```shell
+   cd go
+   make
+   ```
+
+1. Run the go client.
+
+   ```shell
+   cd ..
+   MG_KEY_ID=<your-key-id> MG_SECRET_KEY=<your-secret-key> bin/mcgo ping
+   # Or run...
+   bin/mcgo --key-id <your-key-id> --secret-key <your-secret-key> ping
+   ```
+
+1. What if you want to reuse the same access key and secret? We can substitute the access key id and secret key with the root username and password.
+
+   ```shell
+   bin/mcgo ping  # The root username and password is used as default values (don't use this in production)
+   ```
+
+## Documentation
+
+Minio has excellent documentation (in fact, one of the better ones out there) with ample examples (cli tool and code). Visit <https://min.io/docs> for more information.
+
 ## References
 
-[Minio: Quickstart for Kubernetes](https://min.io/docs/minio/kubernetes/upstream/index.html)
+* [Minio: Quickstart for Kubernetes](https://min.io/docs/minio/kubernetes/upstream/index.html)
+* [Github: Minio Go SDK](https://github.com/minio/minio-go)
